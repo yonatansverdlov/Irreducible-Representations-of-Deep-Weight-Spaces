@@ -60,9 +60,29 @@ def train_and_evaluate(config, model_type, noise, seed):
     config.noise = noise
     
     # Dataset and DataLoader
-    train_dataset = SyntheticGraphMatchingDataset(n=20, num_graphs=10, noise=config.noise, num_samples=1000)
-    val_dataset = SyntheticGraphMatchingDataset(n=20, num_graphs=10, noise=config.noise, num_samples=200)
-    test_dataset = SyntheticGraphMatchingDataset(n=20, num_graphs=10, noise=config.noise, num_samples=200)
+    train_dataset = SyntheticGraphMatchingDataset(
+    n=20,
+    num_graphs=10,
+    noise=config.noise,
+    num_samples=1000,
+    seed=0,
+    )
+
+    val_dataset = SyntheticGraphMatchingDataset(
+        n=20,
+        num_graphs=10,
+        noise=config.noise,
+        num_samples=200,
+        seed=1_000_000,
+    )
+
+    test_dataset = SyntheticGraphMatchingDataset(
+        n=20,
+        num_graphs=10,
+        noise=config.noise,
+        num_samples=200,
+        seed=2_000_000,
+    )
 
     train_loader = DataLoader(train_dataset, batch_size=config.bs, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=config.bs)
@@ -93,7 +113,7 @@ def train_and_evaluate(config, model_type, noise, seed):
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
 
     # Testing
-    test_results = trainer.test(model, dataloaders=test_loader)
+    test_results = trainer.test(model, dataloaders=test_loader, ckpt_path="best")  # Use the best model checkpoint
     return test_results[0]['test_acc']  # Return the first (and only) test result
                           
                         

@@ -49,15 +49,30 @@ def generate_dataset_torch(n: int, k: int, noise_level: float) -> torch.Tensor:
 
 
 class SyntheticGraphMatchingDataset(Dataset):
-    def __init__(self, n: int, num_graphs: int, noise: float = 0.0, num_samples: int = 1000):
+    def __init__(
+        self,
+        n: int,
+        num_graphs: int,
+        noise: float = 0.0,
+        num_samples: int = 1000,
+        seed: int = 0,
+    ):
         self.n = n
         self.num_graphs = num_graphs
         self.noise = noise
         self.num_samples = num_samples
+        self.seed = seed
 
     def __len__(self):
         return self.num_samples
 
     def __getitem__(self, idx: int):
-        torch.manual_seed(idx)
-        return generate_dataset_torch(self.n, self.num_graphs, self.noise)
+        # Generate each sample deterministically without modifying
+        # the global RNG state used for model training.
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(self.seed + idx)
+            return generate_dataset_torch(
+                self.n,
+                self.num_graphs,
+                self.noise,
+            )
